@@ -44,10 +44,12 @@ class CPU:
 
     def op_ldi(self, operand_a, operand_b):
         self.reg[operand_a] = operand_b
+        self.pc += 3 
     
     def op_prn(self, operand_a):
         print(self.reg[operand_a])
-    
+        self.pc +=2
+
     def op_hlt(self):
         sys.exit()
     
@@ -55,11 +57,13 @@ class CPU:
         self.stack_pointer -= 1
         value = self.ram[operand_a]
         self.ram[self.stack_pointer] = value
+        self.pc += 2
     
     def op_pop(self, operand_a):
         val = self.ram[self.stack_pointer]
         self.reg[operand_a] = val
         self.stack_pointer += 1 
+        self.pc += 2
     
     def op_ret(self):
         address = self.ram[self.stack_pointer]
@@ -79,11 +83,14 @@ class CPU:
     def op_jeq(self, operand_a):
         if self.fl == 0b00000010:
             self.pc = self.reg[operand_a]
+        else:
+            self.pc += 2
     
     def op_jne(self, operand_a):
         if self.fl != 0b00000010:
             self.pc = self.reg[operand_a]
-
+        else:
+            self.pc += 2
 
 
     def load(self):
@@ -161,7 +168,7 @@ class CPU:
 
         else:
             raise Exception('Unsupported ALU operation')
-
+        self.pc += 3
     def trace(self):
         """
         Handy function to print out the CPU state. You might want to call this
@@ -184,7 +191,7 @@ class CPU:
 
     def run(self):
         """Run the CPU"""
-
+        
         ir = self.ram[self.pc]
 
         while True:
@@ -214,5 +221,4 @@ class CPU:
                 self.op_table[ir]()
             else:
                 self.op_hlt()
-            
-            self.pc += cpu_op + 1
+
