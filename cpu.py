@@ -12,6 +12,9 @@ class CPU:
         #pointer position 0 at the ram
         self.pc = 0
 
+        # init flag to None
+        self.fl = None
+
         # init registers
         self.reg = [0]*8
 
@@ -29,7 +32,10 @@ class CPU:
         self.op_table[0b01000110] = self.op_pop
         self.op_table[0b00010001] = self.op_ret
         self.op_table[0b01010000] = self.op_call
-    
+        self.op_table[0b01010100] = self.op_jmp
+        self.op_table[0b01010101] = self.op_jeq
+        self.op_table[0b01010110] = self.op_jne
+
     def ram_read(self, address):
         return self.ram[address]
 
@@ -66,6 +72,19 @@ class CPU:
         self.ram[self.stack_pointer] = address
         sub_address = self.ram[operand_a]
         self.stack_pointer = sub_address
+    
+    def op_jmp(self, operand_a):
+        self.pc = self.reg[operand_a]
+    
+    def op_jeq(self, operand_a):
+        if self.fl == 0b00000010:
+            self.pc = self.reg[operand_a]
+    
+    def op_jne(self, operand_a):
+        if self.fl != 0b00000010:
+            self.pc = self.reg[operand_a]
+
+
 
     def load(self):
         """load program into memory"""
@@ -84,10 +103,10 @@ class CPU:
 
                     if num is not '':
                         num = int(num, 2)
-                        print(f'value in loading {num}')
+                        # print(f'value in loading {num}')
                     
-                    self.ram[address] = num
-                    address +=1
+                        self.ram[address] = num
+                        address +=1
         
         except FileNotFoundError:
             print(f'{sys.argv[0]}: {sys.argv[1]} not found')
@@ -102,6 +121,7 @@ class CPU:
         XOR = 0b10101011
         SHR = 0b10101101
         SHL = 0b10101100
+        CMP = 0b10100111
 
         if op == ADD:
             self.reg[reg_a] += self.reg[reg_b]
@@ -129,6 +149,16 @@ class CPU:
             left = shl << self.reg[reg_b]
             self.reg[reg_a] = left
         
+        elif op == CMP:
+            a = self.reg[reg_a]
+            b = self.reg[reg_b]
+            if a == b:
+                self.fl = 0b00000010
+            elif a < b:
+                self.fl = 0b00000100
+            elif a > b: 
+                self.fl = 0b00000001
+
         else:
             raise Exception('Unsupported ALU operation')
 
